@@ -1,6 +1,6 @@
 {
   "name": "Visual Timer",
-  "description": "A simple visual timer, lives in the panel ",
+  "description": "A simple visual timer for working and studying purposes.\nIt lives in the top panel so it can get out the way.",
   "uuid": "visualtimer@dlinh2011",
   "shell-version": [
     "3.38"

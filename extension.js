@@ -64,7 +64,8 @@ const Indicator = GObject.registerClass(
         }
 
         createPopupMenu() {
-            /** The crux of this function is taken from egg-timer */
+            /** The crux of this function is taken from the Gnome shell-extension egg-timer@gregorriegler.com */
+
             /* ------ PlayButton ------ */
             this.playIcon = new St.Icon({
                 gicon: new Gio.ThemedIcon({ name: 'media-playback-start' }),
@@ -79,7 +80,7 @@ const Indicator = GObject.registerClass(
             /** ------- Slider ------ */
             let sliderItem = new PopupMenu.PopupBaseMenuItem();
             this.timeSlider = new Slider.Slider(0);
-            this.timeSlider.connect(valueChanged(), this.onSliderMoved);
+            this.timeSlider.connect(valueChanged(), this.onSliderMoved.bind(this));
             sliderItem.add(this.timeSlider);
 
             /** ------ Print duration of Slider ------ */
@@ -96,7 +97,7 @@ const Indicator = GObject.registerClass(
                 style_class: 'system-status-icon',
             });
             this.cancelButton = new St.Button();
-            this.cancelButton.connect('clicked', this.onClickCancelButton);
+            this.cancelButton.connect('clicked', this.onClickCancelButton.bind(this));
             this.cancelButton.set_child(this.cancelIcon);
             let cancelButtonItem = new PopupMenu.PopupBaseMenuItem();
             cancelButtonItem.add(this.cancelButton);
@@ -111,15 +112,14 @@ const Indicator = GObject.registerClass(
         }
 
         onClickCancelButton() {
-            isTimer = false;
-            duration = 0;
+            resetTimer();
         }
 
         onClickPlayButton() {
             // reset the VisualTimer
             duration = range(MIN_TIME, MAX_TIME, this.timeSlider.value);
             isTimer = true;
-            log("click play");
+            // debug log("click play");
             addToMainloop();
         }
 
@@ -131,12 +131,17 @@ const Indicator = GObject.registerClass(
         destroy() {
             if (timeoutID) {
                 Mainloop.source_remove(timeoutID);
+                timeoutID = null;
             }
+            actor.destroy();
             super.destroy();
         }
 
     }
 );
+
+
+/** static functions */
 
 function addToMainloop() {
     timeoutID = Mainloop.timeout_add_seconds(30, function () {
@@ -145,13 +150,8 @@ function addToMainloop() {
     });
 }
 
-
-
-
-/** static functions */
-
 function redraw(area) {
-    let tempsNow = Date.now();
+    /** The crux of this function is taken from the Gnome shell-extension analog-clock@sharats.me */
     let [width, height] = area.get_surface_size();
     let cr = area.get_context();
     try {
@@ -167,24 +167,22 @@ function redraw(area) {
     cr.stroke();
     cr.setLineWidth(1);
 
-    /*
+
     // Central dot
     cr.arc(0, 0, 1.5, 0, 2 * Math.PI);
     cr.fill();
-    */
 
-    log("duration() " + duration);
-
+    let tempsNow = Date.now();
+    log("duration() " + duration); // to debug
     let minuteSize = Math.floor(height * 0.45);
     let minuteAngle = (duration / 60) * Math.PI / 30;
 
     drawTimer(cr, minuteAngle, minuteSize);
 
-
     if (isTimer && duration <= 0) {
         Main.notify("Timer ends");
-        Mainloop.source_remove(timeoutID);
-        isTimer = false;
+        resetTimer();
+        return;
     }
 
     // make sure that it's at least 30 seconds from the last redraw 
@@ -192,8 +190,16 @@ function redraw(area) {
 
     if (isTimer && tempsNow - temps >= 30 * 1000 - 1) {
         duration -= 30;
+        temps = tempsNow;
     }
-    temps = tempsNow;
+}
+
+function resetTimer() {
+    Mainloop.source_remove(timeoutID);
+    timeoutID = null;
+    isTimer = false;
+    temps = 0;
+    duration = 0;
 }
 
 
@@ -208,12 +214,14 @@ function drawTimer(cr, angle, size) {
 }
 
 function valueChanged() {
+    /** This function is taken from the Gnome shell-extension egg-timer@gregorriegler.com */
     return parseFloat(Config.PACKAGE_VERSION.substring(0, 4)) > 3.32
         ? 'notify::value'
         : 'value-changed'
 }
 
 function range(min, max, percentage) {
+    /** This function is taken from the Gnome shell-extension egg-timer@gregorriegler.com */
     let range = max - min;
     let notRounded = range * percentage;
     let roundedToMinutes = Math.floor(notRounded / 60) * 60;
@@ -221,7 +229,7 @@ function range(min, max, percentage) {
 }
 
 function prettyPrint(percentage) {
-    /** This function is taken from egg-timer */
+    /** This function is taken from the Gnome shell-extension egg-timer@gregorriegler.com */
     let duration = range(MIN_TIME, MAX_TIME, percentage);
     let minutes = parseInt(duration / 60, 10);
     let seconds = parseInt(duration % 60, 10);
