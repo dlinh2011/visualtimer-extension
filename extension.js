@@ -52,7 +52,6 @@ const Indicator = GObject.registerClass(
             this.add_child(this.createPanelFace());
             // create a popupMenu 
             this.menu.addMenuItem(this.createPopupMenu());
-            this.menu.disc
         }
 
         createPanelFace() {
@@ -268,6 +267,10 @@ class Extension {
     disable() {
         this._indicator.destroy();
         this._indicator = null;
+        duration = 0;
+        isTimer = false;
+        temps = 0;
+
     }
 }
 
