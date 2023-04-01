@@ -172,18 +172,19 @@ function redraw(area) {
     cr.arc(0, 0, 1.5, 0, 2 * Math.PI);
     cr.fill();
 
-    let tempsNow = Date.now();
-    log("duration() " + duration); // to debug
+    // log("duration() " + duration); // to debug
     let minuteSize = Math.floor(height * 0.45);
     let minuteAngle = (duration / 60) * Math.PI / 30;
 
     drawTimer(cr, minuteAngle, minuteSize);
 
     if (isTimer && duration <= 0) {
-        Main.notify("Timer ends");
+        Main.notify("Session ends");
         resetTimer();
         return;
     }
+
+    let tempsNow = Date.now();
 
     // make sure that it's at least 30 seconds from the last redraw 
     // because hover or click on the panel item cause the CSS to change therefore also emits a 'repaint'
