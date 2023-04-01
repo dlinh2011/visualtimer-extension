@@ -41,6 +41,8 @@ let timeoutID, actor;
 let duration = 0;
 let isTimer = false;
 
+let temps = 0;
+
 const Indicator = GObject.registerClass(
     class Indicator extends PanelMenu.Button {
         _init() {
@@ -77,7 +79,7 @@ const Indicator = GObject.registerClass(
             /** ------- Slider ------ */
             let sliderItem = new PopupMenu.PopupBaseMenuItem();
             this.timeSlider = new Slider.Slider(0);
-            this.timeSlider.connect(valueChanged(), this.onSliderMoved.bind(this));
+            this.timeSlider.connect(valueChanged(), this.onSliderMoved);
             sliderItem.add(this.timeSlider);
 
             /** ------ Print duration of Slider ------ */
@@ -94,7 +96,7 @@ const Indicator = GObject.registerClass(
                 style_class: 'system-status-icon',
             });
             this.cancelButton = new St.Button();
-            //this.cancelButton.connect('clicked', this.onClickCancelButton.bind(this));
+            this.cancelButton.connect('clicked', this.onClickCancelButton);
             this.cancelButton.set_child(this.cancelIcon);
             let cancelButtonItem = new PopupMenu.PopupBaseMenuItem();
             cancelButtonItem.add(this.cancelButton);
@@ -109,13 +111,15 @@ const Indicator = GObject.registerClass(
         }
 
         onClickCancelButton() {
-            this.stop();
+            isTimer = false;
+            duration = 0;
         }
 
         onClickPlayButton() {
             // reset the VisualTimer
             duration = range(MIN_TIME, MAX_TIME, this.timeSlider.value);
             isTimer = true;
+            log("click play");
             addToMainloop();
         }
 
@@ -125,7 +129,9 @@ const Indicator = GObject.registerClass(
         }
 
         destroy() {
-            this.visualTimer.stop();
+            if (timeoutID) {
+                Mainloop.source_remove(timeoutID);
+            }
             super.destroy();
         }
 
@@ -145,6 +151,7 @@ function addToMainloop() {
 /** static functions */
 
 function redraw(area) {
+    let tempsNow = Date.now();
     let [width, height] = area.get_surface_size();
     let cr = area.get_context();
     try {
@@ -160,9 +167,11 @@ function redraw(area) {
     cr.stroke();
     cr.setLineWidth(1);
 
+    /*
     // Central dot
     cr.arc(0, 0, 1.5, 0, 2 * Math.PI);
     cr.fill();
+    */
 
     log("duration() " + duration);
 
@@ -171,14 +180,20 @@ function redraw(area) {
 
     drawTimer(cr, minuteAngle, minuteSize);
 
-    if (isTimer) {
-        duration -= 30;
-        if (duration == 0) {
-            Main.notify("Timer ends");
-            Mainloop.source_remove(timeoutID);
-            isTimer = false;
-        }
+
+    if (isTimer && duration <= 0) {
+        Main.notify("Timer ends");
+        Mainloop.source_remove(timeoutID);
+        isTimer = false;
     }
+
+    // make sure that it's at least 30 seconds from the last redraw 
+    // because hover or click on the panel item cause the CSS to change therefore also emits a 'repaint'
+
+    if (isTimer && tempsNow - temps >= 30 * 1000 - 1) {
+        duration -= 30;
+    }
+    temps = tempsNow;
 }
 
 
