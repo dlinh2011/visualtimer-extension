@@ -127,15 +127,6 @@ const Indicator = GObject.registerClass(
             this.timeDisplay.set_text(prettyPrint(item.value));
         }
 
-        destroy() {
-            if (timeoutID) {
-                Mainloop.source_remove(timeoutID);
-                timeoutID = null;
-            }
-            actor.destroy();
-            super.destroy();
-        }
-
     }
 );
 
@@ -147,6 +138,16 @@ function addToMainloop() {
         actor.queue_repaint();
         return true;
     });
+}
+
+function resetTimer() {
+    if (timeoutID) {
+        Mainloop.source_remove(timeoutID);
+        timeoutID = null;
+    }
+    isTimer = false;
+    temps = 0;
+    duration = 0;
 }
 
 function redraw(area) {
@@ -196,13 +197,6 @@ function redraw(area) {
     }
 }
 
-function resetTimer() {
-    Mainloop.source_remove(timeoutID);
-    timeoutID = null;
-    isTimer = false;
-    temps = 0;
-    duration = 0;
-}
 
 
 function drawTimer(cr, angle, size) {
@@ -267,9 +261,11 @@ class Extension {
     disable() {
         this._indicator.destroy();
         this._indicator = null;
-        duration = 0;
-        isTimer = false;
-        temps = 0;
+        resetTimer();
+        if (actor) {
+            actor.destroy();
+            actor = null;
+        }
 
     }
 }
