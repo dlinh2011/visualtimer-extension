@@ -1,8 +1,9 @@
 {
   "name": "Visual Timer",
   "description": "This extension add a simple visual timer in the top panel for working and studying purposes.\n",
-  "uuid": "visualtimer@dlinh2011",
+  "uuid": "visualtimer@dlinh2011.github.io",
   "shell-version": [
     "3.38"
-  ]
+  ],
+  "url": "https://github.com/dlinh2011/visualtimer-extension"
 }

@@ -168,9 +168,11 @@ function redraw(area) {
     cr.setLineWidth(1);
 
 
+    /*
     // Central dot
     cr.arc(0, 0, 1.5, 0, 2 * Math.PI);
     cr.fill();
+    */
 
     // log("duration() " + duration); // to debug
     let minuteSize = Math.floor(height * 0.45);
