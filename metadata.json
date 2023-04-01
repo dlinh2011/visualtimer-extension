@@ -1,0 +1,8 @@
+{
+  "name": "Visual Timer",
+  "description": "A simple visual timer, lives in the panel ",
+  "uuid": "visualtimer@dlinh2011",
+  "shell-version": [
+    "3.38"
+  ]
+}
